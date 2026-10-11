@@ -1,0 +1,11 @@
+# Named sessions pinned to the top of the sesh picker (tmux prefix+o).
+# Everything else comes in from zoxide. Sessions open a plain shell; add
+# startup_command = "nvim" to a session to change that.
+
+[[session]]
+name = "notes"
+path = "~/notes"
+
+[[session]]
+name = "configs"
+path = "~/.config"

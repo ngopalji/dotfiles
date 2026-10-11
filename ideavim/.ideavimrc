@@ -1,0 +1,93 @@
+" IdeaVim (JetBrains). Actions: https://jb.gg/h38q75
+
+" ╭─ General ───────────────────────────────────────────────╮
+set number relativenumber
+set scrolloff=5
+set incsearch hlsearch
+set ignorecase smartcase
+set clipboard=unnamedplus
+let mapleader="\<Space>"
+
+" Q formats instead of entering Ex mode
+nnoremap Q gq
+
+" ╭─ Plugins (IdeaVim's built-in Plug) ─────────────────────╮
+Plug 'machakann/vim-highlightedyank'
+Plug 'tpope/vim-commentary'       " gcc / gc
+Plug 'tpope/vim-surround'         " cs"'
+Plug 'tpope/vim-repeat'
+Plug 'easymotion/vim-easymotion'  " <leader><leader>
+let g:highlightedyank_highlight_duration = 300
+
+" ╭─ Movement ──────────────────────────────────────────────╮
+" Shift-HJKL moves 5 at a time; join and help move to gJ / gK
+nnoremap H 5h
+nnoremap J 5j
+nnoremap K 5k
+nnoremap L 5l
+vnoremap H 5h
+vnoremap J 5j
+vnoremap K 5k
+vnoremap L 5l
+nnoremap gJ J
+nnoremap gK K
+
+" Ctrl-hjkl between splits
+nnoremap <C-H> <C-W>h
+nnoremap <C-J> <C-W>j
+nnoremap <C-K> <C-W>k
+nnoremap <C-L> <C-W>l
+
+map <C-n> <Action>(ActivateProjectToolWindow)
+
+" ╭─ Files ─────────────────────────────────────────────────╮
+map <silent> <leader>ff :action GotoFile<CR>
+map <silent> <leader>fw :action SearchEverywhere<CR>
+map <silent> <leader>fp :action RecentFiles<CR>
+map <silent> <leader>fg :action FindInPath<CR>
+map <silent> <leader>fb :action ActivateProjectToolWindow<CR>
+map <silent> <leader>fn :action RenameFile<CR>
+map <silent> <leader>ns :action NewScratchFile<CR>
+map <silent> <leader>sf :action SaveAll<CR>
+
+" ╭─ Code ──────────────────────────────────────────────────╮
+map <silent> <leader>fm :action ReformatCode<CR>
+map <silent> <leader>to :action OptimizeImports<CR>
+map <silent> <leader>ta :action ImportAll<CR>
+nmap <silent> gd :action GotoDeclaration<CR>
+nmap <silent> gD :action GotoTypeDeclaration<CR>
+nmap <silent> gi :action GotoImplementation<CR>
+nmap <silent> gr :action FindUsages<CR>
+map <silent> <leader>rn :action RenameElement<CR>
+map <silent> <leader>rf :action Refactorings.QuickListPopupAction<CR>
+map <silent> <leader>ee :action ShowIntentionActions<CR>
+map <silent> <leader>mv :action Move<CR>
+
+" ╭─ Run / debug ───────────────────────────────────────────╮
+map <silent> <leader>rr :action Run<CR>
+map <silent> <leader>rd :action Debug<CR>
+map <silent> <leader>rl :action Rerun<CR>
+map <silent> <leader>rc :action Stop<CR>
+map <silent> <leader>tt :action RunClass<CR>
+map <silent> <leader>tf :action RunContextTest<CR>
+
+" ╭─ Git ───────────────────────────────────────────────────╮
+map <silent> <leader>gs :action Git.Status<CR>
+map <silent> <leader>gc :action CheckinProject<CR>
+map <silent> <leader>gp :action Git.Push<CR>
+map <silent> <leader>gl :action Git.Log<CR>
+map <silent> <leader>gb :action Annotate<CR>
+
+" ╭─ Windows ───────────────────────────────────────────────╮
+map <silent> <leader>ww :action HideAllWindows<CR>
+map <silent> <leader>qq :action CloseContent<CR>
+map <silent> <leader>qqq :action CloseAllEditors<CR>
+map <silent> <leader>q  :action CloseProject<CR>
+map <silent> <leader>hh :action Back<CR>
+map <silent> <leader>ll :action Forward<CR>
+map <silent> <leader>ss :action ToggleDistractionFreeMode<CR>
+map <silent> <leader>mm :action TogglePresentationMode<CR>
+
+" ╭─ Misc ──────────────────────────────────────────────────╮
+map <silent> <leader>pp :action PasteSimple<CR>
+map <silent> <leader>cc :action CopyPaths<CR>

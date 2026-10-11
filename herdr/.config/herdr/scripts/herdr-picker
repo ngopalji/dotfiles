@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Fuzzy picker for herdr workspaces and agents, search focused on open.
+# Bound to prefix+o as a popup in config.toml. `herdr-picker --list` prints the rows.
+set -euo pipefail
+
+herdr="${HERDR_BIN_PATH:-herdr}"
+
+list() {
+  local ws ag
+  ws=$("$herdr" workspace list)
+  ag=$("$herdr" agent list)
+  # target<TAB>display; agents are listed under their workspace
+  jq -rn --argjson ws "$ws" --argjson ag "$ag" '
+    def c(code; s): "\u001b[" + code + "m" + s + "\u001b[0m";
+    def dot(state):
+      { working: c("33"; "●"), blocked: c("31"; "●"), done: c("32"; "●"),
+        idle: c("90"; "○") }[state] // c("90"; "·");
+    $ag.result.agents as $agents
+    | $ws.result.workspaces[]
+    | . as $w
+    | ("ws:" + $w.workspace_id + "\t" + dot($w.agent_status) + " " + c("1"; $w.label)
+         + (if $w.focused then c("90"; "  (current)") else "" end)),
+      ($agents[] | select(.workspace_id == $w.workspace_id)
+        | "agent:" + .pane_id + "\t   " + dot(.agent_status) + " " + .agent
+          + "  " + c("90"; .terminal_title_stripped // ""))
+  '
+}
+
+[[ "${1:-}" == "--list" ]] && { list; exit 0; }
+
+# Gruvbox Dark palette to match Ghostty + herdr theme
+sel=$(list | fzf --ansi --no-sort --layout=reverse \
+  --delimiter=$'\t' --with-nth=2 \
+  --style=minimal --info=inline-right --no-scrollbar \
+  --prompt='  ' --pointer='▌' --ghost='jump to workspace or agent' \
+  --footer=' enter jump · esc close' \
+  --color='fg:#a89984,fg+:#ebdbb2,bg+:#3c3836,hl:#50fa7b,hl+:#50fa7b' \
+  --color='prompt:#50fa7b,pointer:#50fa7b,info:#665c54,footer:#665c54' \
+  --color='ghost:#665c54,separator:#3c3836,gutter:-1') || exit 0
+
+target=${sel%%$'\t'*}
+case "$target" in
+  ws:*)    "$herdr" workspace focus "${target#ws:}" >/dev/null ;;
+  agent:*) "$herdr" agent focus "${target#agent:}" >/dev/null ;;
+esac

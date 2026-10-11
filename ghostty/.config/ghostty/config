@@ -1,0 +1,11 @@
+# All options: ghostty +show-config --default --docs
+theme = Gruvbox Dark
+
+# Match JetBrains rendering: slightly smaller than default, Regular weight thickened
+font-size = 12.5
+font-thicken = true
+font-thicken-strength = 75
+adjust-cell-height = 10%
+
+# Left option sends alt (herdr alt+hjkl resize). Right option still types é, — etc.
+macos-option-as-alt = left

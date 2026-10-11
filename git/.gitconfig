@@ -1,0 +1,9 @@
+[user]
+	name = nihaar
+	email = nihaar.gopalji@gmail.com
+# Push over SSH, but keep fetching over HTTPS so clones work before an SSH key exists
+[url "git@github.com:"]
+	pushInsteadOf = https://github.com/
+# Per-machine overrides, e.g. a work email (untracked; skipped if missing)
+[include]
+	path = ~/.gitconfig.local

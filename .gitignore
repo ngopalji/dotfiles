@@ -1,0 +1,14 @@
+.DS_Store
+
+# Karabiner writes a dated copy of karabiner.json on every save
+karabiner/.config/karabiner/automatic_backups/
+
+# herdr keeps sockets, logs and session snapshots next to its config.
+# Only config.toml and scripts/ are tracked (guards against the folder ever being folded into a link).
+herdr/.config/herdr/*
+!herdr/.config/herdr/config.toml
+!herdr/.config/herdr/scripts/
+
+# Secrets are sourced from ~/.zshrc.secrets and must never land here
+.zshrc.secrets
+*.secrets
