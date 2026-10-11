@@ -34,8 +34,8 @@ sel=$(list | fzf --ansi --no-sort --layout=reverse \
   --style=minimal --info=inline-right --no-scrollbar \
   --prompt='  ' --pointer='▌' --ghost='jump to workspace or agent' \
   --footer=' enter jump · esc close' \
-  --color='fg:#a89984,fg+:#ebdbb2,bg+:#3c3836,hl:#50fa7b,hl+:#50fa7b' \
-  --color='prompt:#50fa7b,pointer:#50fa7b,info:#665c54,footer:#665c54' \
+  --color='fg:#a89984,fg+:#ebdbb2,bg+:#3c3836,hl:#fabd2f,hl+:#fabd2f' \
+  --color='prompt:#fabd2f,pointer:#fabd2f,info:#665c54,footer:#665c54' \
   --color='ghost:#665c54,separator:#3c3836,gutter:-1') || exit 0
 
 target=${sel%%$'\t'*}

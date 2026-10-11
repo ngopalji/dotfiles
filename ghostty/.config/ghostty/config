@@ -7,5 +7,5 @@ font-thicken = true
 font-thicken-strength = 75
 adjust-cell-height = 10%
 
-# Left option sends alt (herdr alt+hjkl resize). Right option still types é, — etc.
+# Left option as alt for herdr alt+hjkl resize
 macos-option-as-alt = left

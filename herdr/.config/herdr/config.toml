@@ -7,13 +7,9 @@ onboarding = false
 [theme]
 name = "gruvbox"                   # matches Ghostty's Gruvbox Dark
 
-[ui]
-accent = "#50fa7b"                 # bright terminal green: focused border + highlights (default cyan)
+[theme.custom]
+accent = "#71d674"                 # focused pane border + herdr's popups
 
-# Agent name on top: the terminal title, which is the `claude -n <name>` / `/rename`
-# name, or Claude's auto topic. Manual pane names (prefix+shift+p) show below.
-# Agents stay in workspace order (ui.agent_panel_sort default), so row N = prefix+N.
-# Default: [["state_icon", "machine", "workspace", "tab"], ["agent"]]
 [ui.sidebar.agents]
 rows = [
   ["state_icon", { token = "terminal_title_stripped", bold = true }],
@@ -29,7 +25,7 @@ focus_pane_left  = ["prefix+h", "ctrl+h"]   # tmux: C-hjkl
 focus_pane_down  = ["prefix+j", "ctrl+j"]
 focus_pane_up    = ["prefix+k", "ctrl+k"]
 focus_pane_right = ["prefix+l", "ctrl+l"]
-resize_pane_left  = "alt+h"        # hold left option, tap/hold hjkl (needs Ghostty macos-option-as-alt = left)
+resize_pane_left  = "alt+h"        # left option; needs Ghostty macos-option-as-alt = left
 resize_pane_down  = "alt+j"
 resize_pane_up    = "alt+k"
 resize_pane_right = "alt+l"
@@ -38,19 +34,18 @@ split_vertical = "prefix+|"        # tmux: | splits right (default prefix+v)
 split_horizontal = "prefix+minus"  # tmux: - splits down
 zoom = "prefix+m"                  # tmux: bind m resize-pane -Z (default prefix+z)
 
-# Agents: the sidebar is the menu, these keys are how you pick from it
+# Agents
 open_notification_target = "prefix+a"   # jump to agent needing attention (default prefix+o)
-focus_agent = "prefix+1..9"             # Nth agent row in the sidebar
+focus_agent = "prefix+1..9"             # Nth agent in the sidebar
 next_agent     = "ctrl+shift+j"         # walk the agent list without the prefix (unbound by default)
 previous_agent = "ctrl+shift+k"
-switch_tab = ""                         # was prefix+1..9; tabs still on prefix+n/p
+switch_tab = ""                         # default prefix+1..9, taken by focus_agent
 
 # Workspaces
 goto = "prefix+g"                       # built-in picker
-# prefix+w (default) = navigate mode: j/k walks workspaces with live preview, enter picks, esc leaves
-navigate_workspace_down = "j"           # default down/up arrows
+navigate_workspace_down = "j"           # prefix+w navigate mode (default arrows)
 navigate_workspace_up   = "k"
-navigate_pane_left  = "ctrl+h"          # default hjkl, moved so j/k can walk workspaces
+navigate_pane_left  = "ctrl+h"          # default hjkl
 navigate_pane_down  = "ctrl+j"
 navigate_pane_up    = "ctrl+k"
 navigate_pane_right = "ctrl+l"
