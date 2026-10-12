@@ -26,6 +26,7 @@ brew "yazi"
 
 # Editor + git
 brew "neovim"
+brew "tree-sitter-cli" # nvim-treesitter (main) builds parsers with it
 brew "tmux"
 brew "git"
 brew "git-delta"
