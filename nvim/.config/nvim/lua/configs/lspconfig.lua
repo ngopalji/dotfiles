@@ -44,31 +44,37 @@ require("typescript-tools").setup {
   },
 }
 
--- Python setup with Pyright for type checking and Ruff for linting/formatting
-vim.lsp.config("pyright", {
-  settings = {
-    python = {
-      analysis = {
-        autoSearchPaths = true,
-        useLibraryCodeForTypes = true,
-        typeCheckingMode = "standard",
-        diagnosticMode = "workspace",
-        autoImportCompletions = true,
-        completeFunctionParens = true,
-      },
-    },
-  },
-})
+-- Python setup with Pyrefly for type checking and Ruff for linting/formatting
+-- Prefer the project's own <root>/.venv/bin/<bin> so the version matches what the
+-- repo pins (and CI runs); fall back to the brew-installed one on PATH.
+local function venv_cmd(bin, args)
+  return function(dispatchers, config)
+    local exe = bin
+    local local_bin = config.root_dir and (config.root_dir .. "/.venv/bin/" .. bin)
+    if local_bin and vim.uv.fs_stat(local_bin) then
+      exe = local_bin
+    end
+    return vim.lsp.rpc.start(vim.list_extend({ exe }, args), dispatchers, {
+      cwd = config.cmd_cwd or config.root_dir,
+      env = config.cmd_env,
+    })
+  end
+end
+
+-- Pyrefly for types / go-to-definition. It reads [tool.pyrefly] from pyproject.toml,
+-- so search paths and the interpreter come from the repo, not from here.
+vim.lsp.config("pyrefly", { cmd = venv_cmd("pyrefly", { "lsp" }) })
 
 -- Ruff for fast Python linting and formatting
 vim.lsp.config("ruff", {
+  cmd = venv_cmd("ruff", { "server" }),
   on_attach = function(client, _)
-    -- Disable hover in favor of Pyright
+    -- Disable hover in favor of Pyrefly
     client.server_capabilities.hoverProvider = false
   end,
 })
 
-vim.lsp.enable { "pyright", "ruff" }
+vim.lsp.enable { "pyrefly", "ruff" }
 
 -- Go setup with gopls (helper binaries managed by go.nvim's :GoInstallBinaries)
 vim.lsp.config("gopls", {

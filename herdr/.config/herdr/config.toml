@@ -10,6 +10,9 @@ name = "gruvbox"                   # matches Ghostty's Gruvbox Dark
 [theme.custom]
 accent = "#71d674"                 # focused pane border + herdr's popups
 
+[ui]
+prompt_new_tab_name = false        # prefix+c opens a tab immediately; rename later with prefix+shift+t
+
 [ui.sidebar.agents]
 rows = [
   ["state_icon", { token = "terminal_title_stripped", bold = true }],
@@ -36,10 +39,9 @@ zoom = "prefix+m"                  # tmux: bind m resize-pane -Z (default prefix
 
 # Agents
 open_notification_target = "prefix+a"   # jump to agent needing attention (default prefix+o)
-focus_agent = "prefix+1..9"             # Nth agent in the sidebar
 next_agent     = "ctrl+shift+j"         # walk the agent list without the prefix (unbound by default)
 previous_agent = "ctrl+shift+k"
-switch_tab = ""                         # default prefix+1..9, taken by focus_agent
+# prefix+1..9 stays on herdr's default: switch_tab (Nth tab)
 
 # Workspaces
 goto = "prefix+g"                       # built-in picker

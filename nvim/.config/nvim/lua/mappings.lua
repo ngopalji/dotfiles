@@ -201,7 +201,9 @@ map("n", "<leader>tr", "<cmd>TSToolsRemoveUnused<CR>", { desc = "Remove unused" 
 map("n", "<leader>tg", "<cmd>TSToolsGoToSourceDefinition<CR>", { desc = "Go to source definition" })
 
 -- Python specific
-map("n", "<leader>pi", "<cmd>LspPyrightOrganizeImports<CR>", { desc = "Organize Python imports" })
+map("n", "<leader>pi", function()
+  vim.lsp.buf.code_action { context = { only = { "source.organizeImports" } }, apply = true }
+end, { desc = "Organize Python imports" })
 map("n", "<leader>pt", "<cmd>lua vim.lsp.buf.type_definition()<CR>", { desc = "Type definition" })
 
 -- Make tab more useful
