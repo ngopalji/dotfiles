@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Open a file in the nvim you're already using, not a new one.
+
+    nvim-open path/to/file.py[:line[:col]] [--no-focus]
+    nvim-open --list            # every running nvim and which pane it's in
+
+Which nvim (inside herdr): the one in the caller's herdr tab, then one in the
+caller's workspace; ties go to the nvim whose cwd contains the file (so a
+worktree's file lands in that worktree's editor). None there → a new herdr pane
+running nvim, split right of the caller. Outside herdr: $NVIM (when run from an
+nvim terminal), else the nvim whose cwd contains the file.
+
+Lands in a normal editing window (never the file tree / Agent Watch panel),
+jumps to the line, then focuses that herdr pane unless --no-focus.
+"""
+import glob
+import json
+import os
+import socket
+import subprocess
+import sys
+
+HERDR = os.environ.get("HERDR_BIN_PATH", "herdr")
+IN_HERDR = bool(os.environ.get("HERDR_PANE_ID"))
+
+# Runs inside the target nvim. Reuses a window already showing the file, else
+# the current window if it's a normal file window, else the first one that is.
+OPEN_LUA = """(function(a)
+  local path, line, col = a[1], a[2], a[3]
+  -- leave insert/cmdline/terminal mode; noremap so <C-n> mappings (tree toggle, cmp) don't fire
+  if vim.api.nvim_get_mode().mode ~= "n" then
+    vim.api.nvim_feedkeys(vim.keycode("<C-\\\\><C-n>"), "nx", false)
+  end
+  local function normal(w)
+    local b = vim.api.nvim_win_get_buf(w)
+    return vim.api.nvim_win_get_config(w).relative == "" and vim.bo[b].buftype == ""
+      and not vim.bo[b].filetype:match("^NvimTree") and not vim.bo[b].filetype:match("^agentwatch")
+  end
+  local target
+  for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(w)) == path then target = w break end
+  end
+  if not target and normal(vim.api.nvim_get_current_win()) then target = vim.api.nvim_get_current_win() end
+  if not target then
+    for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do if normal(w) then target = w break end end
+  end
+  if target then vim.api.nvim_set_current_win(target) else vim.cmd("botright vsplit") end
+  if vim.api.nvim_buf_get_name(0) ~= path then vim.cmd.edit(vim.fn.fnameescape(path)) end
+  if line > 0 then
+    pcall(vim.api.nvim_win_set_cursor, 0, { math.min(line, vim.api.nvim_buf_line_count(0)), math.max(col - 1, 0) })
+    vim.cmd("normal! zz")
+  end
+  return vim.fn.expand("%:~:.") .. ":" .. vim.fn.line(".")
+end)(_A)"""
+
+INFO_EXPR = 'json_encode({"pane": $HERDR_PANE_ID, "cwd": getcwd(), "file": expand("%:p")})'
+
+
+def die(msg):
+    print(f"nvim-open: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def nvim_remote(server, *args, timeout=3):
+    return subprocess.run(["nvim", "--server", server, *args], capture_output=True, text=True, timeout=timeout)
+
+
+def herdr_call(method, params):
+    """Raw socket API call (for methods the CLI doesn't expose, like pane.focus)."""
+    s = socket.socket(socket.AF_UNIX)
+    s.settimeout(3)
+    s.connect(os.environ["HERDR_SOCKET_PATH"])
+    s.sendall((json.dumps({"id": "nvim-open", "method": method, "params": params}) + "\n").encode())
+    buf = b""
+    while not buf.endswith(b"\n"):
+        chunk = s.recv(65536)
+        if not chunk:
+            break
+        buf += chunk
+    return json.loads(buf or b"{}")
+
+
+def herdr_panes():
+    out = subprocess.run([HERDR, "pane", "list"], capture_output=True, text=True)
+    res = json.loads(out.stdout or "{}").get("result", {})
+    panes = res.get("panes", res) if isinstance(res, dict) else res
+    return {p["pane_id"]: p for p in panes or []}
+
+
+def servers():
+    """Every live nvim: {server, pane, cwd, file}. Stale sockets are skipped."""
+    tmp = os.environ.get("TMPDIR", "/tmp/")
+    socks = glob.glob(os.path.join(tmp, f"nvim.{os.environ.get('USER', '')}", "*", "nvim.*.0"))
+    if os.environ.get("NVIM"):
+        socks.insert(0, os.environ["NVIM"])
+    found, seen = [], set()
+    for s in socks:
+        if s in seen:
+            continue
+        seen.add(s)
+        try:
+            r = nvim_remote(s, "--remote-expr", INFO_EXPR)
+            info = json.loads(r.stdout) if r.returncode == 0 else None
+        except (subprocess.TimeoutExpired, json.JSONDecodeError):
+            info = None
+        if info:
+            info["server"] = s
+            info["mtime"] = os.path.getmtime(s) if os.path.exists(s) else 0
+            found.append(info)
+    return found
+
+
+def under(path, d):
+    return bool(d) and (path == d or path.startswith(d.rstrip("/") + "/"))
+
+
+def pick(nvims, path):
+    if not IN_HERDR:
+        if os.environ.get("NVIM"):
+            return next((n for n in nvims if n["server"] == os.environ["NVIM"]), None)
+        hits = [n for n in nvims if under(path, n["cwd"])]
+        return max(hits, key=lambda n: (len(n["cwd"]), n["mtime"]), default=None)
+
+    panes = herdr_panes()
+    me = panes.get(os.environ["HERDR_PANE_ID"], {})
+    best, best_key = None, None
+    for n in nvims:
+        p = panes.get(n.get("pane") or "")
+        if not p:
+            continue  # nvim not in a live herdr pane
+        same_tab = p.get("tab_id") == me.get("tab_id")
+        same_ws = p.get("workspace_id") == me.get("workspace_id")
+        if not same_ws:
+            continue
+        key = (same_tab, under(path, n["cwd"]), len(n["cwd"]), n["mtime"])
+        if best_key is None or key > best_key:
+            best, best_key = n, key
+    return best
+
+
+def new_pane(path, line):
+    split = subprocess.run(
+        [HERDR, "pane", "split", os.environ["HERDR_PANE_ID"], "--direction", "right", "--focus", "--cwd", os.getcwd()],
+        capture_output=True, text=True,
+    )
+    try:
+        pane_id = json.loads(split.stdout)["result"]["pane"]["pane_id"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        die("herdr split failed: " + (split.stderr or split.stdout).strip())
+    cmd = "nvim " + (f"+{line} " if line else "") + "'" + path.replace("'", "'\\''") + "'"
+    subprocess.run([HERDR, "pane", "run", pane_id, cmd], capture_output=True)
+    print(f"opened {os.path.relpath(path)}" + (f":{line}" if line else "") + f" in a new nvim (herdr pane {pane_id})")
+
+
+def parse_target(arg):
+    path, line, col = arg, 0, 0
+    parts = arg.rsplit(":", 2)
+    if len(parts) == 3 and parts[1].isdigit() and parts[2].isdigit():
+        path, line, col = parts[0], int(parts[1]), int(parts[2])
+    elif len(parts) >= 2 and parts[-1].isdigit():
+        path, line = arg.rsplit(":", 1)[0], int(parts[-1])
+    return os.path.abspath(os.path.expanduser(path)), line, col
+
+
+def main():
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return
+    if args[0] == "--list":
+        panes = herdr_panes() if IN_HERDR else {}
+        for n in servers():
+            p = panes.get(n.get("pane") or "", {})
+            where = f"{n.get('pane')} (tab {p.get('tab_id')})" if p else "not in a live herdr pane"
+            print(f"{where:32} {n['cwd']}  →  {n['file'] or '[no file]'}")
+        return
+
+    focus = "--no-focus" not in args
+    targets = [a for a in args if not a.startswith("--")]
+    if len(targets) != 1:
+        die("give exactly one file[:line[:col]]")
+    path, line, col = parse_target(targets[0])
+    if os.path.isdir(path):
+        die(f"{path} is a directory")
+
+    target = pick(servers(), path)
+    if not target:
+        if IN_HERDR:
+            return new_pane(path, line)
+        die("no running nvim found (start one, or run this inside herdr)")
+
+    lua = OPEN_LUA.replace("'", "''")
+    r = nvim_remote(target["server"], "--remote-expr", f"luaeval('{lua}', {json.dumps([path, line, col])})")
+    if r.returncode != 0 or not r.stdout.strip():
+        die("nvim refused: " + (r.stderr or r.stdout).strip())
+
+    where = ""
+    if IN_HERDR and target.get("pane"):
+        where = f" (herdr pane {target['pane']})"
+        if focus:
+            herdr_call("pane.focus", {"pane_id": target["pane"]})
+    print(f"opened {r.stdout.strip()} in nvim{where}")
+
+
+if __name__ == "__main__":
+    main()

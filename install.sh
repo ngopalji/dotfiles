@@ -14,14 +14,15 @@ p10k=~/.oh-my-zsh/custom/themes/powerlevel10k
 
 # herdr writes sockets/logs/sessions next to config.toml, so ~/.config/herdr must
 # stay a real directory. Creating it first stops stow from folding it into a link.
-mkdir -p ~/.config/herdr
+# Same for ~/.claude (sessions, history) and ~/.local/bin (other tools install there).
+mkdir -p ~/.config/herdr ~/.claude ~/.local/bin
 
 packages=(*/)
 stow -v "${packages[@]%/}"
 
 # Karabiner only notices a newly symlinked config dir after a restart
-if pgrep -q karabiner_console_user_server; then
-  launchctl kickstart -k "gui/$(id -u)/org.pqrs.service.agent.karabiner_console_user_server"
+if pgrep -q Karabiner-Console-User-Server; then
+  launchctl kickstart -k "gui/$(id -u)/org.pqrs.service.agent.Karabiner-Console-User-Server"
 fi
 
 herdr integration install claude

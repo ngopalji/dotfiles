@@ -11,8 +11,9 @@ The desktop apps are good at surfacing what Nihaar needs to see, and they keep g
 - Never commit secrets. Tokens/API keys go in `~/.zshrc.secrets` (untracked). This repo is public.
 - Dry-run first: `stow -nv <pkg>`, show the result, then `stow <pkg>`.
 - New tool the setup depends on → add it to `Brewfile` so a fresh Mac gets it from `install.sh`.
-- File-level links (`.zshrc`, `.zprofile`, `.p10k.zsh`, `.tmux.conf`, `.gitconfig`, `.ideavimrc`, herdr's `config.toml`) get replaced by anything that writes-then-renames (`sed -i`, `p10k configure`). Edit the repo file directly. `stow -nv */` reports a replaced link as a conflict; fix with `stow --adopt <pkg>` + `git diff`.
-- `~/.config/herdr` must stay a real directory (sockets/logs/sessions live there); only `config.toml` is linked.
+- File-level links (`.zshrc`, `.zprofile`, `.p10k.zsh`, `.tmux.conf`, `.gitconfig`, `.ideavimrc`, herdr's `config.toml`, `~/.claude/CLAUDE.md`) get replaced by anything that writes-then-renames (`sed -i`, `p10k configure`). Edit the repo file directly. `stow -nv */` reports a replaced link as a conflict; fix with `stow --adopt <pkg>` + `git diff`.
+- `~/.config/herdr`, `~/.claude` and `~/.local/bin` must stay real directories (sockets, sessions, other tools' binaries live there); `install.sh` creates them before stowing so stow links files, not the folder.
+- Small custom tools go in the `bin` package (`bin/.local/bin/`, on `PATH`).
 - After changing a config, tell the user how to reload it rather than restarting apps unasked:
 
 | App | Reload |

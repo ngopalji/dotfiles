@@ -245,11 +245,32 @@
                         ]
                     },
                     {
-                        "description": "Left Control \u2192 Hyper Key (Ctrl+Shift+Opt+Cmd)",
+                        "description": "Left Control / Right Option \u2192 Hyper Key (Ctrl+Shift+Opt+Cmd); Right Option is the HHKB's Hyper, its Control is Caps",
                         "manipulators": [
                             {
                                 "from": {
                                     "key_code": "left_control",
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "left_shift",
+                                        "modifiers": [
+                                            "left_command",
+                                            "left_control",
+                                            "left_option"
+                                        ]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "right_option",
                                     "modifiers": {
                                         "optional": [
                                             "any"

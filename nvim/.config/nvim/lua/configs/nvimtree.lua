@@ -40,7 +40,17 @@ local options = {
     -- Keep useful mappings but with different keys
     vim.keymap.set("n", "?", api.tree.toggle_help, { buffer = bufnr, desc = "Help" })
     vim.keymap.set("n", "I", api.tree.toggle_gitignore_filter, { buffer = bufnr, desc = "Toggle gitignore" })
-    vim.keymap.set("n", "H", api.tree.toggle_hidden_filter, { buffer = bufnr, desc = "Toggle hidden files" })
+    vim.keymap.set("n", "g.", api.tree.toggle_hidden_filter, { buffer = bufnr, desc = "Toggle hidden files" })
+
+    -- Shift+hjkl moves 5 like everywhere else (replaces nvim-tree's H/J/K/L)
+    for _, k in ipairs { "h", "j", "k", "l" } do
+      vim.keymap.set("n", k:upper(), "5" .. k, { buffer = bufnr, desc = "Move 5 " .. k })
+    end
+
+    -- <C-v>/<C-x> (defaults) split inside nvim; <M-v>/<M-x> open in a new herdr (or tmux) pane
+    local pane = require "configs.pane_open"
+    vim.keymap.set("n", "<M-v>", pane.tree "right", { buffer = bufnr, desc = "Open: herdr/tmux pane right" })
+    vim.keymap.set("n", "<M-x>", pane.tree "down", { buffer = bufnr, desc = "Open: herdr/tmux pane down" })
   end,
 }
 

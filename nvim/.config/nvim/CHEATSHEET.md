@@ -1,7 +1,7 @@
 # Neovim TypeScript Cheatsheet
 
 ## Search
-- `<leader>fw` - Live grep
+- `<leader>fw` - Live grep (visual: grep the selection, literal match)
 - `<leader>ff` - Find files
 - `<leader>fb` - Buffers
 - `<leader>fo` - Recent files
@@ -18,6 +18,12 @@
 - `K` - Hover docs
 - `s` - Flash jump
 - `S` - Flash treesitter
+
+## Opening files where you want them
+Ctrl = nvim split, Alt = new herdr pane (tmux pane if not in herdr) running nvim.
+- `<C-v>` / `<C-x>` - Vertical / horizontal nvim split (file tree + Telescope)
+- `<M-v>` / `<M-x>` - Pane right / below (file tree + Telescope; keeps grep line)
+- `<leader>|` / `<leader>-` - This file at this line in a pane right / below
 
 ## Code Actions
 - `<leader>ca` - Code action

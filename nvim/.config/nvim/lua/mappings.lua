@@ -22,6 +22,17 @@ map("v", "L", "5l", { desc = "Move 5 right" })
 -- Telescope advanced search
 map("n", "<leader>ff", "<cmd>Telescope find_files<CR>", { desc = "Find files" })
 map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>", { desc = "Live grep" })
+-- Select text, <leader>fw: grep the whole project for it, matched literally so
+-- `foo(` or `a.b[0]` just work (prompt stays editable)
+map("x", "<leader>fw", function()
+  local text = table.concat(vim.fn.getregion(vim.fn.getpos "v", vim.fn.getpos ".", { type = vim.fn.mode() }), " ")
+  vim.api.nvim_feedkeys(vim.keycode "<Esc>", "nx", false)
+  require("telescope.builtin").live_grep { default_text = vim.trim(text), additional_args = { "--fixed-strings" } }
+end, { desc = "Live grep selection" })
+
+-- Open this file at this line in a new herdr/tmux pane (mirrors herdr's prefix+| / prefix+-)
+map("n", "<leader>|", function() require("configs.pane_open").current "right" end, { desc = "Open file in pane right" })
+map("n", "<leader>-", function() require("configs.pane_open").current "down" end, { desc = "Open file in pane below" })
 map("n", "<leader>fb", "<cmd>Telescope buffers<CR>", { desc = "Find buffers" })
 map("n", "<leader>fh", "<cmd>Telescope help_tags<CR>", { desc = "Help tags" })
 map("n", "<leader>fo", "<cmd>Telescope oldfiles<CR>", { desc = "Recent files" })
@@ -210,7 +221,7 @@ map("n", "<leader>pt", "<cmd>lua vim.lsp.buf.type_definition()<CR>", { desc = "T
 map("n", "<leader><Tab>", "<C-^>", { desc = "Switch to last buffer" })
 
 -- Tab pages (Diffview / Neogit open in their own tab). `gt` is taken by LSP
--- type definition, so use ]t / [t.
+-- type definition, so cycle with <leader>. / <leader>, (gT still works; jump with :tabn N).
 map("n", "<leader>.", "<cmd>tabnext<CR>", { desc = "Next tab" })
 map("n", "<leader>,", "<cmd>tabprevious<CR>", { desc = "Previous tab" })
 map("n", "<leader>tc", "<cmd>tabclose<CR>", { desc = "Close tab" })
